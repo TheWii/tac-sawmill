@@ -1,8 +1,5 @@
 #> tac:block/sawmill/gui/locked_slots
 
-# DEBUG
-#tellraw @a ["Locked slots count is ",{"score":{"name":"#locked_slots_count", "objective":"tac.temp"}}, ", updating locked slots."]
-
 # Get inserted items
 data modify storage tac:temp insertedItems set from storage tac:temp inventory
 
@@ -18,26 +15,24 @@ data remove storage tac:temp insertedItems[{tag:{lockedSlot:1b}}]
 data remove storage tac:temp insertedItems[{Slot:9b}]
 
 
+# Attempt to move slot 0 to input slot
+execute if entity @s[tag=!tac.has_input] if data storage tac:temp insertedItems[{Slot:0b}] run function tac:block/sawmill/gui/insert_input
+
 ## Drop items if there's at least one
 execute if data storage tac:temp insertedItems[0] at @a[sort=nearest,limit=1,distance=..8] run function tac:block/sawmill/gui/drop_items
 
-## Set dummy items
-replaceitem block ~ ~ ~ container.0 barrier{lockedSlot:1b}
-replaceitem block ~ ~ ~ container.1 barrier{lockedSlot:1b}
-replaceitem block ~ ~ ~ container.10 barrier{lockedSlot:1b}
-replaceitem block ~ ~ ~ container.18 barrier{lockedSlot:1b}
-replaceitem block ~ ~ ~ container.19 barrier{lockedSlot:1b}
+## Reset slots
+loot replace block ~ ~ ~ container.0 loot tac:air
+loot replace block ~ ~ ~ container.1 loot tac:air
+loot replace block ~ ~ ~ container.10 loot tac:air
+loot replace block ~ ~ ~ container.18 loot tac:air
+loot replace block ~ ~ ~ container.19 loot tac:air
 
 
 # Check recipe slots
 
-## Get grid length(Amount of recipes being displayed)
-execute store result score #grid_length tac.temp if data storage tac:temp savedData.recipes[]
-
-##  If grid length is equal to or bigger than 1, then run function 
-### to check if anyslot was removed.
-execute if score #grid_length tac.temp matches 1.. run function tac:block/sawmill/gui/check_craftings
-
+## Check recipe grid slots if there's at least one recipe displayed
+execute if data storage tac:temp savedData.recipes[0] run function tac:block/sawmill/gui/check_craftings
 
 # Kill dropped items and clear items from players
 kill @e[type=item,nbt={Item:{tag:{lockedSlot:1b}}}]
@@ -46,6 +41,10 @@ clear @a #tac:all_items{lockedSlot:1b}
 
 # Update inventory
 data modify storage tac:temp inventory set from block ~ ~ ~ Items
+
+# Reset has input tag
+tag @s remove tac.has_input
+execute if data storage tac:temp inventory[{Slot:9b}] run tag @s add tac.has_input
 
 # To avoid possible bugs, let's force our system to check
 # the recipes by setting '#input_changed' score to 1.

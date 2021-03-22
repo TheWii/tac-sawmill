@@ -1,28 +1,20 @@
 #> tac:block/sawmill/gui/recipes/main
 
-# DEBUG
-#say Input changed.
-
 # Reset variables
 
 #  This is the list of recipes that will be displayed in the GUI later on.
 ## Obviously it'll start as an empty list.
 data modify storage tac:temp matchedRecipes set value []
 
-#  2b is the first slot in the grid, the recipes will be displayed from
-## slot 2b to 8b in the first row, then it'll ignore 9b and 10b and continue
-## in the next row.
-## NOTE: In the way it is righy now, if it reaches the last slot 27b it'll
-## simply break the system, unless a functionality to add 'pages' is added.
-scoreboard players set #slot tac.temp 2
-
+# Reset row cursors
+scoreboard players set #first_row_slot tac.temp 0
+scoreboard players set #second_row_slot tac.temp 0
+scoreboard players set #third_row_slot tac.temp 0
 
 
 # Get input from block inventory
 data modify storage tac:temp input set value {}
 data modify storage tac:temp input set from storage tac:temp inventory[{Slot:9b}]
-#DEBUG
-#tellraw @a ["Comparing input:\n Previous: ", {"nbt":"savedData.input", "storage":"tac:temp"}, "\n Current: ", {"nbt":"input", "storage":"tac:temp"}]
 
 ## Save this input to 'savedData'
 data modify storage tac:temp savedData.input set from storage tac:temp input
@@ -51,32 +43,31 @@ execute if data storage tac:temp input.id if data storage tac:temp recipes[0] ru
 #  At this point, all matched recipes are present in 'matchedRecipes', let's
 ## update the grid now.
 
-#  First we'll reset the grid slots(Empty slots are actually filled with
-## dummy items to prevent shift clicked items from entering unwanted slots
-## and go to the input slot instead.
-replaceitem block ~ ~ ~ container.2 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.3 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.4 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.5 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.6 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.7 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.8 barrier{lockedSlot:1b, isRecipeItem:0b}
+#  First we'll reset the grid slots
+loot replace block ~ ~ ~ container.2 loot tac:air
+loot replace block ~ ~ ~ container.3 loot tac:air
+loot replace block ~ ~ ~ container.4 loot tac:air
+loot replace block ~ ~ ~ container.5 loot tac:air
+loot replace block ~ ~ ~ container.6 loot tac:air
+loot replace block ~ ~ ~ container.7 loot tac:air
+loot replace block ~ ~ ~ container.8 loot tac:air
 
-replaceitem block ~ ~ ~ container.11 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.12 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.13 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.14 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.15 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.16 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.17 barrier{lockedSlot:1b, isRecipeItem:0b}
+loot replace block ~ ~ ~ container.11 loot tac:air
+loot replace block ~ ~ ~ container.12 loot tac:air
+loot replace block ~ ~ ~ container.13 loot tac:air
+loot replace block ~ ~ ~ container.14 loot tac:air
+loot replace block ~ ~ ~ container.15 loot tac:air
+loot replace block ~ ~ ~ container.16 loot tac:air
+loot replace block ~ ~ ~ container.17 loot tac:air
 
-replaceitem block ~ ~ ~ container.20 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.21 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.22 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.23 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.24 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.25 barrier{lockedSlot:1b, isRecipeItem:0b}
-replaceitem block ~ ~ ~ container.26 barrier{lockedSlot:1b, isRecipeItem:0b}
+loot replace block ~ ~ ~ container.20 loot tac:air
+loot replace block ~ ~ ~ container.21 loot tac:air
+loot replace block ~ ~ ~ container.22 loot tac:air
+loot replace block ~ ~ ~ container.23 loot tac:air
+loot replace block ~ ~ ~ container.24 loot tac:air
+loot replace block ~ ~ ~ container.25 loot tac:air
+loot replace block ~ ~ ~ container.26 loot tac:air
+
 
 #  Now we'll append the matched recipe display items to the container.
 ## 'append matchedRecipes[].display' basically means "from each element in list, get
@@ -85,6 +76,19 @@ replaceitem block ~ ~ ~ container.26 barrier{lockedSlot:1b, isRecipeItem:0b}
 data modify block ~ ~ ~ Items append from storage tac:temp matchedRecipes[].display
 # DEBUG
 #tellraw @a ["----------\nMatched recipes: ", {"nbt":"matchedRecipes", "storage":"tac:temp"}]
+
+# Save row lengths
+scoreboard players operation @s tac.frow_len = #first_row_slot tac.temp
+scoreboard players operation @s tac.srow_len = #second_row_slot tac.temp
+scoreboard players operation @s tac.trow_len = #third_row_slot tac.temp
+
+# Calculate expected item amount in the container
+scoreboard players set @s tac.total_slots 0
+scoreboard players operation @s tac.total_slots += @s tac.frow_len
+scoreboard players operation @s tac.total_slots += @s tac.srow_len
+scoreboard players operation @s tac.total_slots += @s tac.trow_len
+scoreboard players operation @s tac.locked_slots = @s tac.total_slots
+scoreboard players add @s[tag=tac.has_input] tac.total_slots 1
 
 # Save the matched recipes to 'savedData' and set tell our system to save this data
 data modify storage tac:temp savedData.recipes set from storage tac:temp matchedRecipes

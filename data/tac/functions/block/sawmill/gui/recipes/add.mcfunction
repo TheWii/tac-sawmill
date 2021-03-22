@@ -7,15 +7,28 @@
 # Append recipe to list
 data modify storage tac:temp matchedRecipes append from storage tac:temp recipes[-1]
 
-# Store the slot to the display item
+# Make sure some nbt tags are correct
+data modify storage tac:temp matchedRecipes[-1].display.tag.lockedSlot set value 1b
+data modify storage tac:temp matchedRecipes[-1].display.tag.isRecipeItem set value 1b
+data remove storage tac:temp matchedRecipes[-1].output.Slot
+
+
+# Store recipe's displayRow to a score
+execute store result score #display_row tac.temp run data get storage tac:temp recipes[-1].displayRow
+
+# Calculate real slot
+scoreboard players set #slot tac.temp 9
+scoreboard players operation #slot tac.temp *= #display_row tac.temp
+scoreboard players add #slot tac.temp 2
+
+execute if score #display_row tac.temp matches 0 run scoreboard players operation #slot tac.temp += #first_row_slot tac.temp
+execute if score #display_row tac.temp matches 1 run scoreboard players operation #slot tac.temp += #second_row_slot tac.temp
+execute if score #display_row tac.temp matches 2 run scoreboard players operation #slot tac.temp += #third_row_slot tac.temp
+
+# Store slot to recipe display item
 execute store result storage tac:temp matchedRecipes[-1].display.Slot byte 1 run scoreboard players get #slot tac.temp
 
-
-# Increase slot index
-scoreboard players add #slot tac.temp 1
-
-## Reached first row end
-execute if score #slot tac.temp matches 9..10 run scoreboard players set #slot tac.temp 11
-
-## Reached second row end
-execute if score #slot tac.temp matches 18..19 run scoreboard players set #slot tac.temp 20
+# Increase row slot by 1
+execute if score #display_row tac.temp matches 0 run scoreboard players add #first_row_slot tac.temp 1
+execute if score #display_row tac.temp matches 1 run scoreboard players add #second_row_slot tac.temp 1
+execute if score #display_row tac.temp matches 2 run scoreboard players add #third_row_slot tac.temp 1

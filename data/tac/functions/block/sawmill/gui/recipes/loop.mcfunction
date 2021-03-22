@@ -9,7 +9,7 @@ execute store success score #different tac.temp run data modify storage tac:temp
 
 
 # Get recipe cost
-execute store result score #recipe_cost tac.temp run data get storage tac:temp recipes[-1].cost
+execute if score #different tac.temp matches 0 store result score #recipe_cost tac.temp run data get storage tac:temp recipes[-1].cost
 
 # DEBUG
 #tellraw @a [" - Recipe material: ", {"nbt":"recipes[-1].material", "storage":"tac:temp"}, "\n - Cost: ", {"score":{"name":"#recipe_cost", "objective":"tac.temp"}}]

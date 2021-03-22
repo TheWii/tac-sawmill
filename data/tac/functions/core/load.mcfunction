@@ -2,7 +2,12 @@
 
 # Objectives
 scoreboard objectives add tac.temp dummy
-scoreboard objectives add tac.slots dummy
+scoreboard objectives add tac.io dummy
+scoreboard objectives add tac.total_slots dummy
+scoreboard objectives add tac.locked_slots dummy
+scoreboard objectives add tac.frow_len dummy
+scoreboard objectives add tac.srow_len dummy
+scoreboard objectives add tac.trow_len dummy
 
 # Load configs
-function tac:core/config
+execute positioned 0 0 0 run function tac:core/config
